@@ -1,0 +1,51 @@
+name: tests
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+env:
+  TF_VERSION: 1.8.5
+
+jobs:
+  static-tests:
+    name: Static (repo hygiene & security)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: false
+      - name: Run static tests
+        run: cd tests && go test -v ./...
+
+  terraform-unit-tests:
+    name: Terraform unit (mocked provider)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+      - uses: hashicorp/setup-terraform@v4.0.1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      - name: Test VPC module
+        working-directory: terraform/modules/vpc
+        run: |
+          terraform init -backend=false -input=false
+          terraform test
+      - name: Test dev environment networking
+        working-directory: terraform/environments/dev
+        run: |
+          terraform init -backend=false -input=false
+          terraform test
+
+  # Integration tests run on a schedule or manual dispatch only — they need
+  # AWS credentials and (optionally) create real resources.
+  # Trigger manually: gh workflow run tests.yml -f integration=true

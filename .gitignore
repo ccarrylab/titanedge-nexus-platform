@@ -1,0 +1,35 @@
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+tfplan
+.terraform.lock.hcl
+*.auto.tfvars
+!terraform.tfvars.example
+
+**/.terraform/
+tfplan
+tfplan.bin
+*.tfplan
+
+# Mac
+.DS_Store
+
+# Terraform state (never commit — use remote backend)
+*.tfstate
+*.tfstate.backup
+*.tfstate.backup2
+.terraform/terraform.tfstate
+
+# Karpenter files with account-specific ARNs
+karpenter-trust-policy.json
+karpenter-controller-policy.json
+karpenter-controller-policy-updated.json
+karpenter-trust.json
+karpenter-resources.yaml
+karpenter-resources.yaml
+karpenter.yaml
+karpenter.rendered.yaml
+karpenter.override.yaml
+karpenter-values.yaml
+bootstrap-nodegroup.yaml

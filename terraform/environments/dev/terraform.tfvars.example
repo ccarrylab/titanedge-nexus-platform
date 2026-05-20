@@ -1,0 +1,9 @@
+environment = "dev"
+vpc_cidr    = "10.0.0.0/16"
+
+# Optional overrides — defaults are set in variables.tf
+# github_org           = "your-org"
+# github_repo          = "your-repo"
+# state_bucket         = "your-unique-bucket-name"
+# node_instance_types  = ["t3.small"]
+# eks_public_access_cidrs = ["YOUR.IP/32"]  # restrict in stage/prod

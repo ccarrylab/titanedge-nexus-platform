@@ -1,0 +1,5 @@
+# Example terraform.tfvars for prod environment
+aws_region   = "us-east-1"
+environment  = "prod"
+vpc_cidr     = "10.30.0.0/16"
+# subnet_ids    = ["subnet-abc123", "subnet-def456"]

@@ -1,0 +1,9 @@
+global:
+  prometheus:
+    enabled: true
+
+kubecostProductConfigs:
+  clusterName: titanedge-nexus-platform
+
+networkCosts:
+  enabled: true
