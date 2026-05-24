@@ -1,0 +1,11 @@
+.terraform/
+*.tfstate
+*.tfstate.backup
+crash.log
+override.tf
+override.tf.json
+terraform.tfvars
+*.pem
+.DS_Store
+.idea/
+.vscode/
