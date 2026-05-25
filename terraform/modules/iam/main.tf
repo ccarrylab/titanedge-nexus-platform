@@ -1,3 +1,14 @@
+terraform {
+  required_version = ">= 1.5.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
 resource "aws_iam_role" "platform_role" {
   name = "atlasrelay-platform-role"
 
@@ -11,4 +22,8 @@ resource "aws_iam_role" "platform_role" {
       }
     }]
   })
+
+  tags = {
+    Environment = var.environment
+  }
 }

@@ -1,3 +1,1 @@
-variable "environment" {
-  type = string
-}
+# Observability module variables

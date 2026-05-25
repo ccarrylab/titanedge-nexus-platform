@@ -1,3 +1,1 @@
-variable "environment" {
-  default = "dev"
-}
+# Security module variables

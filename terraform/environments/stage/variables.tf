@@ -1,3 +1,1 @@
-variable "environment" {
-  default = "stage"
-}
+# Stage environment configuration

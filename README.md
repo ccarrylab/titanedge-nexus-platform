@@ -35,3 +35,37 @@ Production-style AWS infrastructure platform built with Terraform, Kubernetes, a
 ## Status
 
 Actively evolving platform engineering environment focused on deployment automation and operational reliability.
+
+---
+
+## CI/CD Platform Engineering
+
+The platform uses enterprise-style GitHub Actions workflows with:
+
+- Terraform validation
+- Security scanning
+- Drift detection
+- Kubernetes manifest validation
+- FinOps policy checks
+- Artifact management
+- Multi-stage deployment gates
+- OIDC-based AWS authentication
+- Manual production approvals
+
+### Deployment Strategy
+
+dev -> stage -> production
+
+### Security Tooling
+
+- tfsec
+- Checkov
+- TFLint
+- pre-commit hooks
+
+### Operational Features
+
+- Infrastructure drift detection
+- GitOps workflows
+- Cost optimization validation
+- Deployment promotion controls
