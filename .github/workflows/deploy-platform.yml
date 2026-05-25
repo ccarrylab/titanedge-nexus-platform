@@ -44,7 +44,7 @@ jobs:
 
       - name: Terraform Apply
         working-directory: terraform/environments/dev
-        run: terraform apply -auto-approve -var="environment=dev"
+        run: terraform apply -auto-approve -var-file=terraform.tfvars
 
   deploy-stage:
     name: deploy-stage
@@ -83,7 +83,7 @@ jobs:
 
       - name: Terraform Apply
         working-directory: terraform/environments/stage
-        run: terraform apply -auto-approve -var="environment=stage"
+        run: terraform apply -auto-approve -var-file=terraform.tfvars
 
   deploy-prod:
     name: deploy-prod
@@ -124,4 +124,4 @@ jobs:
 
       - name: Terraform Apply
         working-directory: terraform/environments/prod
-        run: terraform apply -auto-approve -var="environment=prod"
+        run: terraform apply -auto-approve -var-file=terraform.tfvars
