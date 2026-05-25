@@ -93,7 +93,7 @@ jobs:
         run: terraform plan -lock=false -out=tfplan
         continue-on-error: false
       - name: Upload Plan
-        uses: actions/upload-artifact@v4.0.0
+        uses: actions/upload-artifact@v7
         with:
           name: terraform-plan
           path: terraform/environments/dev/tfplan
