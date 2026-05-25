@@ -115,7 +115,10 @@ jobs:
         run: |
           cat > backend.tfvars <<BACKEND
           bucket         = "${{ secrets.TF_STATE_BUCKET }}"
+          key            = "titanedge-nexus-platform/dev/terraform.tfstate"
+          region         = "us-east-1"
           dynamodb_table = "${{ secrets.TF_STATE_LOCK_TABLE }}"
+          encrypt        = true
           BACKEND
       - name: Terraform Init
         working-directory: terraform/environments/dev
