@@ -68,4 +68,7 @@ dev -> stage -> production
 - Infrastructure drift detection
 - GitOps workflows
 - Cost optimization validation
+
+  <img width="1536" height="1024" alt="TitanEdge Nexus platform architecture diagram" src="https://github.com/user-attachments/assets/15fa0cb7-5a83-4819-9879-b1ce83db4ad4" />
+
 - Deployment promotion controls
