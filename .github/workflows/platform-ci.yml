@@ -45,7 +45,7 @@ jobs:
     needs: []
     timeout-minutes: 10
     env:
-  TF_VAR_environment: dev
+      TF_VAR_environment: dev
     steps:
       - uses: actions/checkout@v4
       - name: Configure AWS Credentials
