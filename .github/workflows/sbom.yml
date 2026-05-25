@@ -4,20 +4,17 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "0 0 * * 1"
+    - cron: '0 0 * * 1'
 
 jobs:
   sbom:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/checkout@v5
       - name: Generate SBOM with Syft
         uses: anchore/sbom-action@v0.15.8
         with:
-          path: "./"
-          format: "spdx-json"
-          output-file: "sbom.spdx.json"
-      - uses: actions/upload-artifact@v4.0.0
-        with:
-          name: "sbom"
-          path: "sbom.spdx.json"
+          path: ./
+          format: spdx-json
+          output-file: sbom.spdx.json
+          artifact-name: sbom
