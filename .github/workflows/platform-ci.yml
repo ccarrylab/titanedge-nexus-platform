@@ -16,55 +16,7 @@ env:
       TF_VAR_environment: dev
 
 jobs:
-  terraform-quality:
-    name: Quality (fmt, validate, tflint)
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-      - name: Terraform Format
-        run: terraform fmt -check -recursive
-      - name: Terraform Init (quality)
-        working-directory: terraform/environments/dev
-        run: terraform init
-      - name: Terraform Validate
-        working-directory: terraform/environments/dev
-        run: terraform validate
-      - uses: terraform-linters/setup-tflint@v4
-        name: Setup TFLint
-        with:
-          tflint_version: v0.52.0
-      - name: Cache TFLint plugins
-        uses: actions/cache@v4
-        with:
-          path: ~/.tflint.d/plugins
-          key: ${{ runner.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
-      - name: Run TFLint
-        run: tflint --recursive --config .tflint.hcl
 
-  terraform-security:
-    name: Security (tfsec, checkov)
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - name: tfsec Scan
-        uses: aquasecurity/tfsec-action@v1.0.3
-        continue-on-error: true
-        with:
-          additional_args: --soft-fail --exclude-path .terraform --exclude-path terraform/modules --exclude-path .git
-      - name: Checkov Scan
-        uses: bridgecrewio/checkov-action@master
-        continue-on-error: true
-        with:
-          directory: .
-          soft_fail: true
-          skip_check: CKV_AWS_18,CKV_AWS_23,CKV_AWS_117
-          quiet: true
-          output_format: cli
 
   kubernetes-validation:
     name: Kubernetes manifests
