@@ -9,3 +9,24 @@ terraform.tfvars
 .DS_Store
 .idea/
 .vscode/
+
+# macOS
+.DS_Store
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Kubernetes
+kubeconfig
+
+# Python
+__pycache__/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
