@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - main
-
   push:
     branches:
       - main
@@ -22,44 +21,34 @@ jobs:
   terraform-quality:
     name: terraform-quality
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ env.TF_VERSION }}
-
       - name: Terraform Format
         run: terraform fmt -check -recursive
-
-      - name: Terraform Init
+      - name: Terraform Init (quality)
         working-directory: terraform/environments/dev
         run: terraform init
-
       - name: Terraform Validate
         working-directory: terraform/environments/dev
         run: terraform validate
-
       - name: TFLint
         uses: terraform-linters/setup-tflint@v4
-
       - name: Run TFLint
         run: tflint --recursive
 
   terraform-security:
     name: terraform-security
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: tfsec Scan
         uses: aquasecurity/tfsec-action@v1.0.3
-
       - name: Checkov Scan
         uses: bridgecrewio/checkov-action@master
         with:
@@ -68,11 +57,9 @@ jobs:
   kubernetes-validation:
     name: kubernetes-validation
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Validate Kubernetes Manifests
         uses: instrumenta/kubeval-action@master
         with:
@@ -81,11 +68,9 @@ jobs:
   finops-analysis:
     name: finops-analysis
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: FinOps Validation
         run: |
           echo "Checking infrastructure cost optimization posture"
@@ -99,22 +84,31 @@ jobs:
     needs:
       - terraform-quality
       - terraform-security
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      - name: Create backend.tfvars
+        working-directory: terraform/environments/dev
+        run: |
+          cat > backend.tfvars <<EOF
+          bucket         = "${{ secrets.TF_STATE_BUCKET }}"
+          dynamodb_table = "${{ secrets.TF_STATE_LOCK_TABLE }}"
+          EOF
       - name: Terraform Init
         working-directory: terraform/environments/dev
-        run: terraform init
-
+        run: terraform init -reconfigure -backend-config=backend.tfvars
       - name: Terraform Plan
         working-directory: terraform/environments/dev
         run: terraform plan -out=tfplan
-
       - name: Upload Terraform Plan
         uses: actions/upload-artifact@v4
         with:
@@ -124,11 +118,9 @@ jobs:
   drift-detection:
     name: drift-detection
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Drift Detection
         run: |
           echo "Checking for infrastructure drift"
@@ -141,10 +133,8 @@ jobs:
       - terraform-plan
       - kubernetes-validation
       - finops-analysis
-
     environment:
       name: production
-
     steps:
       - name: Production Approval Gate
         run: echo "Awaiting manual approval"
