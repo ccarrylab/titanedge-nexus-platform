@@ -110,6 +110,11 @@ jobs:
           key: ${{ runner.os }}-terraform-dev-${{ hashFiles('terraform/environments/dev/**/*.tf') }}
           restore-keys: |
             ${{ runner.os }}-terraform-dev-
+      - name: Verify secrets
+        run: |
+          if [ -z "${{ secrets.TF_STATE_BUCKET }}" ]; then echo "TF_STATE_BUCKET secret is missing"; exit 1; fi
+          if [ -z "${{ secrets.TF_STATE_LOCK_TABLE }}" ]; then echo "TF_STATE_LOCK_TABLE secret is missing"; exit 1; fi
+          echo "Secrets are present"
       - name: Remove old backend.tf
         run: rm -f terraform/environments/dev/backend.tf
       - name: Generate backend.tf
