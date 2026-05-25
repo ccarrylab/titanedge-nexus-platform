@@ -19,7 +19,7 @@ jobs:
           scan-ref: "terraform/"
           format: "sarif"
           output: "trivy-iac.sarif"
-      - uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@c7f9125735019aa87c307053cc6e3b0c6ccd4f8f
         with:
           sarif_file: "trivy-iac.sarif"
       - name: Run Trivy on Kubernetes manifests
@@ -29,6 +29,6 @@ jobs:
           scan-ref: "kubernetes/"
           format: "sarif"
           output: "trivy-k8s.sarif"
-      - uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@c7f9125735019aa87c307053cc6e3b0c6ccd4f8f
         with:
           sarif_file: "trivy-k8s.sarif"
