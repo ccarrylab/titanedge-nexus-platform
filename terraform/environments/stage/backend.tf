@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
-    bucket = "atlasrelay-terraform-state"
-    key    = "stage/terraform.tfstate"
-    region = "us-east-1"
+    key     = "titanedge-nexus-platform/${terraform.workspace}/terraform.tfstate"
+    region  = "us-east-1"
+    encrypt = true
   }
 }

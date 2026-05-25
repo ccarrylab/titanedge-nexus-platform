@@ -3,7 +3,7 @@ global:
     enabled: true
 
 kubecostProductConfigs:
-  clusterName: atlasrelay-platform
+  clusterName: titanedge-nexus-platform
 
 networkCosts:
   enabled: true

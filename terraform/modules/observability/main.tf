@@ -10,7 +10,7 @@ terraform {
 }
 
 resource "aws_cloudwatch_log_group" "platform" {
-  name              = "/atlasrelay/platform"
+  name              = "/titanedge-nexus/platform"
   retention_in_days = 30
 
   tags = {

@@ -10,7 +10,7 @@ terraform {
 }
 
 resource "aws_security_group" "eks_security_group" {
-  name        = "atlasrelay-eks-sg"
+  name        = "titanedge-nexus-eks-sg"
   description = "Security group for EKS workloads"
 
   ingress {
@@ -29,6 +29,6 @@ resource "aws_security_group" "eks_security_group" {
 
   tags = {
     ManagedBy = "terraform"
-    Platform  = "atlasrelay"
+    Platform  = "titanedge-nexus"
   }
 }

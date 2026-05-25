@@ -30,3 +30,19 @@ __pycache__/
 # IDE
 .vscode/
 .idea/
+
+# Terraform local files
+.terraform/
+*.tfstate*
+*.tfplan
+*.tfvars
+!.terraform.tfvars.example
+*.auto.tfvars
+*.lock.hcl
+*.bak
+
+# Environment-specific
+**/.terraform/
+**/terraform.tfstate*
+**/terraform.tfvars
+**/backend.tfvars
