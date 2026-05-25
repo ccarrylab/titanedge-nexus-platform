@@ -118,6 +118,11 @@ jobs:
         working-directory: terraform/environments/dev
         run: terraform init -reconfigure -backend-config=backend.tfvars
       - name: Terraform Plan
+          continue-on-error: false
+          id: plan
+      - name: Debug Plan Failure
+        if: failure() && steps.plan.outcome == 'failure'
+        run: cat terraform/environments/dev/tfplan 2>/dev/null || echo "No plan file"
         working-directory: terraform/environments/dev
         run: terraform plan -out=tfplan
       - name: Upload Plan
