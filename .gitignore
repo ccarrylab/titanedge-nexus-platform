@@ -1,69 +1,12 @@
 .terraform/
-*.tfstate
-*.tfstate.backup
-crash.log
-override.tf
-override.tf.json
-*.pem
-.DS_Store
-.idea/
-.vscode/
-
-# macOS
-.DS_Store
-
-# Terraform
-.terraform/
-*.tfstate
-*.tfstate.backup
-
-# Kubernetes
-kubeconfig
-
-# Python
-__pycache__/
-
-# Logs
-*.log
-
-# IDE
-.vscode/
-.idea/
-
-# Terraform local files
-.terraform/
-*.tfstate*
-*.tfplan
-*.tfvars
-*.auto.tfvars
-*.lock.hcl
-*.bak
-
-# Environment-specific
 **/.terraform/
-**/terraform.tfstate*
-**/backend.tfvars
-policy.json
-trust-policy.json
-
-# Exclude all .tfvars files (sensitive data)
-*.tfvars
-*.auto.tfvars
-
-# Terraform crash logs
+*.tfstate
+*.tfstate.*
+*.tfplan
 crash.log
-crash.*.log
-
-# Override files
-override.tf
-override.tf.json
-*_override.tf
-*_override.tf.json
-
-# CLI config
-.terraformrc
-terraform.rc
-
-# Backup files
-*.bak
-.backups/
+*.log
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
