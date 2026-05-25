@@ -3,32 +3,36 @@
 ENV ?= dev
 
 init:
-	cd terraform && terraform init
+	cd terraform/environments/$(ENV) && terraform init
 
 plan:
-	cd terraform && terraform plan -var-file="environments/$(ENV)/terraform.tfvars"
+	cd terraform/environments/$(ENV) && terraform plan -var-file="terraform.tfvars"
+
+apply:
+	cd terraform/environments/$(ENV) && terraform apply -var-file="terraform.tfvars" -auto-approve
 
 apply-dev:
-	cd terraform && terraform apply -var-file="environments/dev/terraform.tfvars" -auto-approve
+	cd terraform/environments/dev && terraform apply -var-file="terraform.tfvars" -auto-approve
 
 apply-stage:
-	cd terraform && terraform apply -var-file="environments/stage/terraform.tfvars" -auto-approve
+	cd terraform/environments/stage && terraform apply -var-file="terraform.tfvars" -auto-approve
 
 apply-prod:
-	cd terraform && terraform apply -var-file="environments/prod/terraform.tfvars" -auto-approve
+	cd terraform/environments/prod && terraform apply -var-file="terraform.tfvars" -auto-approve
 
 destroy:
-	cd terraform && terraform destroy -var-file="environments/$(ENV)/terraform.tfvars"
+	cd terraform/environments/$(ENV) && terraform destroy -var-file="terraform.tfvars" -auto-approve
 
 fmt:
-	cd terraform && terraform fmt -recursive
+	cd terraform/environments/$(ENV) && terraform fmt -recursive
 
 validate:
-	cd terraform && terraform validate
+	cd terraform/environments/$(ENV) && terraform validate
 
 lint: tflint pre-commit
 
 tflint:
+	@echo "Running TFLint..."
 	cd terraform && tflint --init && tflint -f compact
 
 pre-commit:
