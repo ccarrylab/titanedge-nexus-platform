@@ -6,7 +6,7 @@ jobs:
   conftest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6.0.2
       - name: Run Conftest on Kubernetes manifests
         uses: docker://openpolicyagent/conftest:v0.55.0
         with:
