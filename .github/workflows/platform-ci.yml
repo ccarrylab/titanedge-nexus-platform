@@ -38,8 +38,6 @@ jobs:
       - name: Run FinOps checks
         run: |
           echo "✅ Spot instances enabled"
-          echo "✅ Autoscaling configured"
-          echo "✅ Kubecost integration detected"
 
   terraform-plan:
     name: Plan (dev)
