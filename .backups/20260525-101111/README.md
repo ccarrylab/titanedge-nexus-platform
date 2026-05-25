@@ -6,12 +6,6 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 
-[![CI/CD](https://github.com/ccarrylab/titanedge-nexus-platform/actions/workflows/terraform.yml/badge.svg)](https://github.com/ccarrylab/titanedge-nexus-platform/actions/workflows/terraform.yml)
-[![Security](https://github.com/ccarrylab/titanedge-nexus-platform/actions/workflows/security.yml/badge.svg)](https://github.com/ccarrylab/titanedge-nexus-platform/actions/workflows/security.yml)
-[![Terraform Version](https://img.shields.io/badge/terraform-%3E%3D%201.5.0-blue)](https://terraform.io)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-
-
 Production-style AWS infrastructure platform built with Terraform, Kubernetes, and GitOps workflows.
 
 ## Platform Features
@@ -85,27 +79,3 @@ dev -> stage -> production
 
 <img width="1536" height="1024" alt="TitanEdge Nexus platform architecture diagram" src="https://github.com/user-attachments/assets/92c84377-adc5-43c4-b571-2dbc335db085" />
 
-
-## Quick Start
-
-```bash
-git clone https://github.com/ccarrylab/titanedge-nexus-platform.git
-cd titanedge-nexus-platform
-make init ENV=dev
-make plan ENV=dev
-make apply-dev
-```
-
-## Prerequisites
-
-- **Terraform** ≥ 1.5.0
-- **kubectl** ≥ 1.27
-- **AWS CLI** ≥ 2.13
-- **Go** ≥ 1.21
-- **make**, **pre-commit**, **terraform-docs**, **tflint**, **checkov**
-
-## Operational Runbook
-
-- [Rotate IAM credentials](docs/runbooks/rotate-iam.md)
-- [Handle Terraform state lock](docs/runbooks/state-unlock.md)
-- [Promote release stage → prod](docs/runbooks/promote.md)
