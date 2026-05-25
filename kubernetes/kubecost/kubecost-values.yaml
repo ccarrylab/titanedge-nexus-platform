@@ -1,0 +1,9 @@
+global:
+  prometheus:
+    enabled: true
+
+kubecostProductConfigs:
+  clusterName: atlasrelay-platform
+
+networkCosts:
+  enabled: true

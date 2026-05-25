@@ -1,0 +1,18 @@
+apiVersion: karpenter.sh/v1beta1
+kind: Provisioner
+metadata:
+  name: default
+spec:
+  requirements:
+    - key: "karpenter.k8s.aws/instance-category"
+      operator: In
+      values: ["c","m","r"]
+
+  limits:
+    resources:
+      cpu: 1000
+
+  providerRef:
+    name: default
+
+  ttlSecondsAfterEmpty: 30
