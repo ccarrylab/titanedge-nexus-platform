@@ -6,9 +6,9 @@ jobs:
   conftest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/checkout@v5
       - name: Run Conftest on Kubernetes manifests
-        uses: instrumenta/conftest-action@v1.0.0
+        uses: instrumenta/conftest-action@v1
         with:
-          files: "kubernetes/"
-          policy: "kubernetes/policy/"
+          files: kubernetes/
+          policy: kubernetes/policy/
