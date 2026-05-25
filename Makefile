@@ -1,49 +1,44 @@
+.PHONY: init plan apply apply-dev apply-stage apply-prod destroy fmt validate lint tflint pre-commit docs help
+
+ENV ?= dev
+
 init:
-\tterraform init
-
-fmt:
-\tterraform fmt -recursive
-
-validate:
-\tterraform validate
-
-lint:
-\ttflint
-
-security:
-\ttfsec .
-\tcheckov -d .
+	cd terraform && terraform init
 
 plan:
-\tterraform plan
+	cd terraform && terraform plan -var-file="environments/$(ENV)/terraform.tfvars"
 
-apply:
-\tterraform apply
+apply-dev:
+	cd terraform && terraform apply -var-file="environments/dev/terraform.tfvars" -auto-approve
+
+apply-stage:
+	cd terraform && terraform apply -var-file="environments/stage/terraform.tfvars" -auto-approve
+
+apply-prod:
+	cd terraform && terraform apply -var-file="environments/prod/terraform.tfvars" -auto-approve
 
 destroy:
-\tterraform destroy
+	cd terraform && terraform destroy -var-file="environments/$(ENV)/terraform.tfvars"
 
-# ----- Additional targets -----
-.PHONY: test docs lint precommit apply-dev destroy-dev
+fmt:
+	cd terraform && terraform fmt -recursive
 
-test:
-	cd tests && go test -v ./...
+validate:
+	cd terraform && terraform validate
+
+lint: tflint pre-commit
+
+tflint:
+	cd terraform && tflint --init && tflint -f compact
+
+pre-commit:
+	pre-commit run --all-files
 
 docs:
 	@for mod in terraform/modules/*/; do \
-		if [ -f "$${mod}/main.tf" ]; then \
-			terraform-docs markdown table "$${mod}" > "$${mod}/README.md"; \
-			echo "Updated $${mod}/README.md"; \
-		fi \
+		echo "Generating docs for $$mod"; \
+		terraform-docs markdown table --output-file README.md $$mod; \
 	done
 
-lint: precommit
-
-precommit:
-	pre-commit run --all-files
-
-apply-dev:
-	cd terraform/environments/dev && terraform apply -auto-approve
-
-destroy-dev:
-	cd terraform/environments/dev && terraform destroy -auto-approve
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
