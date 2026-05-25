@@ -5,7 +5,11 @@ on:
     branches: [main]
   pull_request:
   schedule:
-    - cron: "0 0 * * 0"
+    - cron: '0 0 * * 0'
+
+permissions:
+  contents: read
+  security-events: write
 
 jobs:
   scan:
@@ -15,20 +19,20 @@ jobs:
       - name: Run Trivy on Terraform
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: "config"
-          scan-ref: "terraform/"
-          format: "sarif"
-          output: "trivy-iac.sarif"
-      - uses: github/codeql-action/upload-sarif@v3
+          scan-type: 'config'
+          scan-ref: 'terraform/'
+          format: 'sarif'
+          output: 'trivy-iac.sarif'
+      - uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: "trivy-iac.sarif"
-      - name: Run Trivy on Kubernetes manifests
+          sarif_file: 'trivy-iac.sarif'
+      - name: Run Trivy on Kubernetes
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: "config"
-          scan-ref: "kubernetes/"
-          format: "sarif"
-          output: "trivy-k8s.sarif"
-      - uses: github/codeql-action/upload-sarif@v3
+          scan-type: 'config'
+          scan-ref: 'kubernetes/'
+          format: 'sarif'
+          output: 'trivy-k8s.sarif'
+      - uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: "trivy-k8s.sarif"
+          sarif_file: 'trivy-k8s.sarif'
