@@ -1,4 +1,4 @@
-# Atlas Relay Platform
+# Titanedge Nexus Platform
 
 Production-style AWS infrastructure platform built with Terraform, Kubernetes, and GitOps workflows.
 
