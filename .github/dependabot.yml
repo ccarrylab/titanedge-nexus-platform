@@ -4,11 +4,20 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # Use the PAT for write access
+    secrets:
+      DEPENDABOT_PAT: ${{ secrets.DEPENDABOT_PAT }}
+
   - package-ecosystem: "terraform"
     directory: "/terraform"
     schedule:
       interval: "weekly"
+    secrets:
+      DEPENDABOT_PAT: ${{ secrets.DEPENDABOT_PAT }}
+
   - package-ecosystem: "terraform"
     directory: "/terraform/modules"
     schedule:
       interval: "weekly"
+    secrets:
+      DEPENDABOT_PAT: ${{ secrets.DEPENDABOT_PAT }}
