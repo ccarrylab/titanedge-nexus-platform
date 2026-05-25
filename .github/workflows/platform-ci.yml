@@ -110,6 +110,8 @@ jobs:
           key: ${{ runner.os }}-terraform-dev-${{ hashFiles('terraform/environments/dev/**/*.tf') }}
           restore-keys: |
             ${{ runner.os }}-terraform-dev-
+      - name: Remove old backend.tf
+        run: rm -f terraform/environments/dev/backend.tf
       - name: Generate backend.tf
         working-directory: terraform/environments/dev
         run: |
