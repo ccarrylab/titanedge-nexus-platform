@@ -3,8 +3,7 @@ terraform {
 
   required_providers {
     aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
+      source = "hashicorp/aws"
     }
   }
 }
@@ -15,7 +14,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags = {
-    Name        = "atlasrelay-vpc"
+    Name        = "titanedge-nexus-vpc"
     Environment = var.environment
     ManagedBy   = "terraform"
   }

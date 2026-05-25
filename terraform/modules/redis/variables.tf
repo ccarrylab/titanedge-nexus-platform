@@ -1,4 +1,4 @@
 variable "cluster_name" {
   type    = string
-  default = "atlasrelay-redis"
+  default = "titanedge-nexus-redis"
 }

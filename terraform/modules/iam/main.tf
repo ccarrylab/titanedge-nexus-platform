@@ -10,7 +10,7 @@ terraform {
 }
 
 resource "aws_iam_role" "platform_role" {
-  name = "atlasrelay-platform-role"
+  name = "titanedge-nexus-platform-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
