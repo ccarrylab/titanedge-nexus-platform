@@ -88,13 +88,19 @@ dev -> stage -> production
 
 ## Quick Start
 
+**Prerequisites**: Terraform ≥ 1.5.0, AWS CLI configured (OIDC or keys).
+
 ```bash
 git clone https://github.com/ccarrylab/titanedge-nexus-platform.git
 cd titanedge-nexus-platform
+
+# Prepare variables (copy and edit)
+cp terraform/environments/dev/terraform.tfvars.example terraform/environments/dev/terraform.tfvars
+
+# Initialize and apply
 make init ENV=dev
 make plan ENV=dev
 make apply-dev
-```
 
 ## Prerequisites
 
