@@ -4,7 +4,6 @@
 crash.log
 override.tf
 override.tf.json
-terraform.tfvars
 *.pem
 .DS_Store
 .idea/
@@ -36,7 +35,6 @@ __pycache__/
 *.tfstate*
 *.tfplan
 *.tfvars
-!.terraform.tfvars.example
 *.auto.tfvars
 *.lock.hcl
 *.bak
@@ -44,5 +42,6 @@ __pycache__/
 # Environment-specific
 **/.terraform/
 **/terraform.tfstate*
-**/terraform.tfvars
 **/backend.tfvars
+policy.json
+trust-policy.json
