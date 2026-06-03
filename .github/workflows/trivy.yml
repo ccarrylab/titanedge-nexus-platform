@@ -15,7 +15,7 @@ jobs:
   scan-iac:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6.0.3
       - name: Run Trivy on Terraform (IaC)
         uses: aquasecurity/trivy-action@master
         with:
@@ -30,7 +30,7 @@ jobs:
   scan-k8s:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6.0.3
       - name: Run Trivy on Kubernetes Manifests
         uses: aquasecurity/trivy-action@master
         with:
