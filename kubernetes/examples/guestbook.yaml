@@ -22,7 +22,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: guestbook
-        image: gcr.io/google-samples/gb-frontend:v4
+        image: nginx:1.27.4@sha256:09369da6b10306312cd908661320086bf87fbae1b6b0c49a1f50ba531fef2eab
         imagePullPolicy: Always
         resources:
           limits:
