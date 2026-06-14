@@ -47,7 +47,6 @@ The original instance had no `storage_encrypted`, no `backup_retention_period`, 
 
 ## Still open
 
-- Prod's `eks_public_access_cidrs` is still set to a placeholder (`YOUR.OFFICE.IP/32`). Don't apply prod until that's a real CIDR.
 - `terraform plan` on dev currently shows two pending in-place updates that aren't from this session — the EKS cluster's KMS key ARN for secrets encryption, and `iam_database_authentication_enabled` flipping to true on RDS. Both look like leftover from an earlier hardening pass that was never applied. Neither is destructive, just apply whenever there's a maintenance window.
 
 ---
