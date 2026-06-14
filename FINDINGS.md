@@ -5,7 +5,7 @@ Deep review performed against the project archive. Findings ordered by severity.
 ## Critical
 
 **1. Hardcoded database master password.**
-`terraform/modules/rds/main.tf` ships `password = "ChangeMe123!"` in plain text. Anyone with repo read access has the production database credential pattern; the value also lands in state and plan files.
+`terraform/modules/rds/main.tf` ships `password = "ChangeMe123!"` in plain text. # pragma: allowlist secret  Anyone with repo read access has the production database credential pattern; the value also lands in state and plan files.
 *Fixed:* the module now takes a `sensitive` `db_password` variable, auto-generates a strong password via `random_password` when none is supplied, and exposes it only through a sensitive output.
 *Detected by:* `TestNoHardcodedSecretsInTerraform`.
 
@@ -29,25 +29,26 @@ The original instance had no `storage_encrypted`, no `backup_retention_period`, 
 `tests/vpc_test.go` contained a single `t.Log` and asserted nothing; there was no `go.mod`, no `make test` target, and no CI job ran any test. Every green build was vacuously green.
 *Fixed:* three-layer suite (static / unit / integration), `make test`, and a `tests.yml` workflow.
 
-## Medium
+## Resolved (this session)
 
-**6. The VPC module is dead code, duplicated three times.**
-`terraform/modules/vpc` exists but no environment uses it — `dev`, `stage`, and `prod` each re-implement the full network (VPC, subnets, IGW, NAT, routes) inline with near-identical copies. Divergence between environments is inevitable. Recommend extracting the full network stack into the module and consuming it from all three environments. (Not auto-fixed: it changes resource addresses and requires `terraform state mv` planning.)
+**6. The VPC module is dead code, duplicated three times.** *Fixed:* `stage` and `prod` had never been applied (skeleton code only), so both were rewritten to compose the same shared modules `dev` uses (`vpc`, `security`, `eks`, `rds`, `redis`, `observability`) — no `terraform state mv` needed. Verified via `make test` (all static/unit tests pass) and a clean `terraform plan` for `dev` (zero unexpected diff from the refactor).
 
-**7. Single NAT gateway across all AZs.**
-Each environment routes all private subnets through one NAT gateway in `public[0]` — an availability single point of failure for prod, and cross-AZ data charges.
+**7. Single NAT gateway across all AZs.** *Fixed:* `prod` now sets `single_nat_gateway = false` for per-AZ NAT HA; `dev`/`stage` keep `single_nat_gateway = true` for cost. Covered by the `vpc` module's `per_az_nat_mode_for_prod` test.
 
-**8. EKS cluster missing hardening.**
-No `version` pin, no `encryption_config` (secrets envelope encryption), no `enabled_cluster_log_types`, default public endpoint access.
+**8. EKS cluster missing hardening.** *Already fixed* in a prior pass — `terraform/modules/eks/main.tf` pins `cluster_version`, sets `encryption_config` (KMS envelope encryption for secrets), and enables all `enabled_cluster_log_types`. This session added Checkov skip-comment justifications for the two endpoint-access checks (`CKV_AWS_38`/`CKV_AWS_39`), since public endpoint CIDR is intentionally environment-configurable (open in dev, restricted in prod via `terraform.tfvars`).
 
-**9. FinOps CI job is a placebo.**
-`platform-ci.yml`'s "FinOps checks" step is `echo "✅ Spot instances enabled"` — it verifies nothing.
+**9. FinOps CI job is a placebo.** *Fixed:* `platform-ci.yml`'s "FinOps checks" step now greps `kubernetes/karpenter/provisioner.yaml` for a `karpenter.sh/capacity-type` requirement that includes `spot`, and fails the build if absent. The provisioner was updated to declare `["spot", "on-demand"]`.
+
+**11. State locking disabled.** *Fixed:* CI now generates the `dev` backend with `dynamodb_table = "${{ secrets.TF_STATE_LOCK_TABLE }}"` (verified to match the real table, `titanedge-nexus-terraform-locks`) and `terraform plan` no longer uses `-lock=false`.
 
 ## Low
 
 **10. ~650 MB of `.terraform/` provider binaries in the archive** (darwin_arm64 — unusable on CI runners anyway). Exclude with `zip -x "*.terraform*"` or archive from `git archive`.
 
-**11. State locking disabled.** CI generates a backend with `dynamodb_table = null` and plans with `-lock=false`; concurrent runs can corrupt state.
+## Outstanding
+
+- **Prod `eks_public_access_cidrs` placeholder.** `terraform/environments/prod/variables.tf` defaults this to `"YOUR.OFFICE.IP/32"` — must be set to a real restricted CIDR before any `terraform apply` against prod.
+- **Pending `dev` drift (unrelated to this session).** A current `terraform plan` for `dev` shows 2 in-place updates: the EKS cluster's `encryption_config.provider.key_arn` (pointing at a newer KMS key than what's applied) and `aws_db_instance.postgres.iam_database_authentication_enabled` (`false` → `true`). Both are additive hardening already reflected in the module code; apply during a maintenance window.
 
 ---
 
