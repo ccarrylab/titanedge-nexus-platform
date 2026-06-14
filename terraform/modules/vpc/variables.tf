@@ -18,7 +18,7 @@ variable "vpc_cidr" {
   }
 
   validation {
-    condition     = can(tonumber(split("/", var.vpc_cidr)[1])) && tonumber(split("/", var.vpc_cidr)[1]) <= 24
+    condition     = can(tonumber(split("/", var.vpc_cidr)[1])) ? tonumber(split("/", var.vpc_cidr)[1]) <= 24 : false
     error_message = "vpc_cidr must be /24 or larger to leave room for subnets."
   }
 }
