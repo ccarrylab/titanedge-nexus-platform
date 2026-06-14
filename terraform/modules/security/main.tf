@@ -19,15 +19,13 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    description = "HTTP redirect"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # Port 80 intentionally not opened: if an HTTP listener is added for
+  # redirect-to-HTTPS, add a scoped ingress rule here at that time.
 
+  # checkov:skip=CKV_AWS_382: ALB needs outbound access to EKS node ports,
+  #   which vary by service; restricting egress would break routing.
   egress {
+    description = "All outbound to VPC and AWS APIs"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -63,7 +61,10 @@ resource "aws_security_group" "eks_nodes" {
     self        = true
   }
 
+  # checkov:skip=CKV_AWS_382: nodes need outbound access to ECR, EKS API,
+  #   and other AWS services for pulling images and CNI/addon traffic.
   egress {
+    description = "All outbound to AWS APIs, ECR, and the internet for image pulls"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"

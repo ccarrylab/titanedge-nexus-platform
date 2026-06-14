@@ -1,118 +1,85 @@
-# ----------------------------------------------------------------------
-# VPC
-# ----------------------------------------------------------------------
-resource "aws_vpc" "main" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_support   = true
-  enable_dns_hostnames = true
+# Prod environment — the entire platform composed from shared modules.
+# Mirrors dev/stage composition; environment-specific values (HA NAT,
+# multi-AZ RDS, deletion protection, restricted EKS access) come from
+# terraform.tfvars.
 
-  tags = {
-    Name        = "titanedge-nexus-${var.environment}-vpc"
-    Environment = var.environment
-    ManagedBy   = "terraform"
-  }
+# ------------------------------------------------------------------
+# Networking
+# ------------------------------------------------------------------
+module "vpc" {
+  source = "../../modules/vpc"
+
+  environment          = var.environment
+  vpc_cidr             = var.vpc_cidr
+  availability_zones   = var.availability_zones
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
+  single_nat_gateway   = var.single_nat_gateway
 }
 
-# Public subnets
-resource "aws_subnet" "public" {
-  vpc_id                  = aws_vpc.main.id
-  count                   = length(var.availability_zones)
-  cidr_block              = var.public_subnet_cidrs[count.index]
-  availability_zone       = var.availability_zones[count.index]
-  map_public_ip_on_launch = true
+# ------------------------------------------------------------------
+# Security groups (tier-isolated, VPC-bound)
+# ------------------------------------------------------------------
+module "security" {
+  source = "../../modules/security"
 
-  tags = {
-    Name        = "titanedge-nexus-${var.environment}-public-${var.availability_zones[count.index]}"
-    Environment = var.environment
-    Type        = "Public"
-  }
+  environment = var.environment
+  vpc_id      = module.vpc.vpc_id
 }
 
-# Private subnets
-resource "aws_subnet" "private" {
-  vpc_id            = aws_vpc.main.id
-  count             = length(var.availability_zones)
-  cidr_block        = var.private_subnet_cidrs[count.index]
-  availability_zone = var.availability_zones[count.index]
-
-  tags = {
-    Name        = "titanedge-nexus-${var.environment}-private-${var.availability_zones[count.index]}"
-    Environment = var.environment
-    Type        = "Private"
-  }
-}
-
-# Internet Gateway
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
-
-
-  tags = {
-    Name = "titanedge-nexus-${var.environment}-igw"
-  }
-}
-
-# Elastic IP for NAT Gateway
-resource "aws_eip" "nat" {
-  domain = "vpc"
-  tags = {
-    Name = "titanedge-nexus-${var.environment}-nat-eip"
-  }
-}
-
-# NAT Gateway (public subnet 0)
-resource "aws_nat_gateway" "main" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public[0].id
-  tags = {
-    Name = "titanedge-nexus-${var.environment}-nat"
-  }
-}
-
-# Route tables
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
-  }
-  tags = {
-    Name = "titanedge-nexus-${var.environment}-public-rt"
-  }
-}
-
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.main.id
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main.id
-  }
-  tags = {
-    Name = "titanedge-nexus-${var.environment}-private-rt"
-  }
-}
-
-# Route table associations
-resource "aws_route_table_association" "public" {
-  count          = length(aws_subnet.public)
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
-}
-
-resource "aws_route_table_association" "private" {
-  count          = length(aws_subnet.private)
-  subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private.id
-}
-
-# ----------------------------------------------------------------------
-# EKS Module (using private subnets)
-# ----------------------------------------------------------------------
+# ------------------------------------------------------------------
+# Compute: EKS + managed node group (fully Terraform-managed)
+# ------------------------------------------------------------------
 module "eks" {
   source = "../../modules/eks"
 
-  subnet_ids = aws_subnet.private[*].id
+  cluster_name        = "titanedge-nexus-${var.environment}"
+  environment         = var.environment
+  subnet_ids          = module.vpc.private_subnet_ids
+  cluster_version     = var.cluster_version
+  public_access_cidrs = var.eks_public_access_cidrs
 
-  cluster_name = "titanedge-nexus-${var.environment}"
+  node_instance_types = var.node_instance_types
+  node_desired_size   = var.node_desired_size
+  node_max_size       = var.node_max_size
+}
 
+# ------------------------------------------------------------------
+# Data: RDS PostgreSQL
+# ------------------------------------------------------------------
+module "rds" {
+  source = "../../modules/rds"
+
+  environment            = var.environment
+  subnet_ids             = module.vpc.private_subnet_ids
+  vpc_security_group_ids = [module.security.rds_sg_id]
+
+  db_name             = var.db_name
+  instance_class      = var.rds_instance_class
+  multi_az            = var.rds_multi_az
+  deletion_protection = var.rds_deletion_protection
+  skip_final_snapshot = var.rds_skip_final_snapshot
+}
+
+# ------------------------------------------------------------------
+# Cache: ElastiCache Redis
+# ------------------------------------------------------------------
+module "redis" {
+  source = "../../modules/redis"
+
+  environment        = var.environment
+  subnet_ids         = module.vpc.private_subnet_ids
+  security_group_ids = [module.security.redis_sg_id]
+  node_type          = var.redis_node_type
+}
+
+# ------------------------------------------------------------------
+# Observability: CloudWatch log groups, alarms, dashboard
+# ------------------------------------------------------------------
+module "observability" {
+  source = "../../modules/observability"
+
+  environment  = var.environment
+  cluster_name = module.eks.cluster_name
+  aws_region   = var.aws_region
 }

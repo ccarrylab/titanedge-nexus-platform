@@ -54,6 +54,10 @@ resource "aws_eks_cluster" "main" {
   name     = var.cluster_name
   role_arn = aws_iam_role.eks_cluster.arn
   # checkov:skip=CKV_AWS_339: 1.35 is currently supported; Checkov policy list lags AWS releases
+  # checkov:skip=CKV_AWS_38: public endpoint CIDR is environment-configurable;
+  #   dev defaults to 0.0.0.0/0 for zero-setup access, prod restricts via tfvars.
+  # checkov:skip=CKV_AWS_39: endpoint_public_access is environment-configurable;
+  #   private access is always enabled alongside it (see vpc_config below).
   version                       = var.cluster_version # pinned: upgrades are deliberate, not surprises
   bootstrap_self_managed_addons = false
 
