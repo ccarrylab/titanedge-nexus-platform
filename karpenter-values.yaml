@@ -1,9 +1,7 @@
-clusterName: titanedge-nexus-dev
-clusterEndpoint: https://935AFB997D1C335629544344E8E24151.gr7.us-east-1.eks.amazonaws.com
-
-serviceAccount:
-  annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::${AWS_ACCOUNT_ID}:role/KarpenterControllerRole-${AWS_ACCOUNT_ID}
+# clusterName, clusterEndpoint, and the service account's IAM role-arn
+# annotation are all passed via --set in install-platform-stack.sh, since
+# they're account/cluster-specific and the endpoint changes if the cluster
+# is ever recreated. See install-platform-stack.sh for the values.
 
 replicas: 1
 
@@ -15,11 +13,6 @@ controller:
     limits:
       cpu: 1
       memory: 1Gi
-  env:
-    - name: CLUSTER_NAME
-      value: titanedge-nexus-dev
-    - name: CLUSTER_ENDPOINT
-      value: https://935AFB997D1C335629544344E8E24151.gr7.us-east-1.eks.amazonaws.com
 
 webhook:
   enabled: false

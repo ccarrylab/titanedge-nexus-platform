@@ -49,6 +49,11 @@ The original instance had no `storage_encrypted`, no `backup_retention_period`, 
 
 - RDS `iam_database_authentication_enabled = true` is queued by AWS as a pending modification (since `apply_immediately` isn't set on the instance) and will take effect at the next maintenance window. Nothing further to do — if you want it sooner, `aws rds reboot-db-instance --db-instance-identifier titanedge-nexus-dev` applies it immediately but causes a brief restart, so only do that during a maintenance window.
 
+- **Missing IAM/IRSA roles for AWS Load Balancer Controller and Karpenter.** `install-platform-stack.sh` now installs both, but neither has an IAM role wired up:
+  - AWS Load Balancer Controller needs an IRSA role built from the AWS-published `AWSLoadBalancerControllerIAMPolicy`, with a trust policy scoped to the `aws-load-balancer-controller` service account in `kube-system`.
+  - Karpenter's values reference `KarpenterControllerRole-${AWS_ACCOUNT_ID}`, which also doesn't exist — needs an IRSA role scoped to the `karpenter` service account in the `karpenter` namespace, with permissions for EC2 instance/fleet management, pricing, and SSM.
+  Until these are created (likely as new resources in `terraform/modules/iam/`), both controllers will start but their AWS API calls will fail. The VPC subnet tags (`kubernetes.io/role/elb`) needed by the LB controller are already in place from `terraform/modules/vpc`.
+
 ## Resolved: dev state drift on EKS secrets KMS key
 
 What looked like a pending "apply the new KMS key to EKS" change was actually state drift, not an unapplied config change. EKS \`encryption_config\` is immutable after cluster creation — you can't change the KMS key on a running cluster. At some point Terraform's state for \`aws_kms_key.eks_secrets\` had drifted to point at a different (orphaned) key than the one the cluster was actually built with, so \`terraform plan\` perpetually wanted to "update" the cluster to use a key it could never actually adopt.
