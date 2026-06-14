@@ -47,7 +47,13 @@ The original instance had no `storage_encrypted`, no `backup_retention_period`, 
 
 ## Still open
 
-- `terraform plan` on dev currently shows two pending in-place updates that aren't from this session — the EKS cluster's KMS key ARN for secrets encryption, and `iam_database_authentication_enabled` flipping to true on RDS. Both look like leftover from an earlier hardening pass that was never applied. Neither is destructive, just apply whenever there's a maintenance window.
+- RDS `iam_database_authentication_enabled = true` is queued by AWS as a pending modification (since `apply_immediately` isn't set on the instance) and will take effect at the next maintenance window. Nothing further to do — if you want it sooner, `aws rds reboot-db-instance --db-instance-identifier titanedge-nexus-dev` applies it immediately but causes a brief restart, so only do that during a maintenance window.
+
+## Resolved: dev state drift on EKS secrets KMS key
+
+What looked like a pending "apply the new KMS key to EKS" change was actually state drift, not an unapplied config change. EKS \`encryption_config\` is immutable after cluster creation — you can't change the KMS key on a running cluster. At some point Terraform's state for \`aws_kms_key.eks_secrets\` had drifted to point at a different (orphaned) key than the one the cluster was actually built with, so \`terraform plan\` perpetually wanted to "update" the cluster to use a key it could never actually adopt.
+
+Fixed by removing the drifted resource from state and re-importing the key the cluster actually uses (\`f0d3930e-8121-44c1-a6b9-b38baa4bd0b6\`). The orphaned key (\`0e5b05e6-...\`) was scheduled for deletion (7-day window, deletes 2026-06-21).
 
 ---
 
