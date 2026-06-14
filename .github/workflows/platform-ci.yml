@@ -79,7 +79,7 @@ jobs:
               bucket         = "${{ secrets.TF_STATE_BUCKET }}"
               key            = "titanedge-nexus-platform/dev/terraform.tfstate"
               region         = "us-east-1"
-              dynamodb_table = null
+              dynamodb_table = "${{ secrets.TF_STATE_LOCK_TABLE }}"
               encrypt        = true
             }
           }
@@ -90,7 +90,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         working-directory: terraform/environments/dev
-        run: terraform plan -lock=false -out=tfplan
+        run: terraform plan -out=tfplan
         continue-on-error: false
       - name: Upload Plan
         uses: actions/upload-artifact@v4.0.0

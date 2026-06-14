@@ -31,5 +31,4 @@ karpenter-resources.yaml
 karpenter.yaml
 karpenter.rendered.yaml
 karpenter.override.yaml
-karpenter-values.yaml
 bootstrap-nodegroup.yaml
