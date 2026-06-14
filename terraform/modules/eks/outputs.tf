@@ -18,6 +18,11 @@ output "oidc_issuer_url" {
   value       = aws_eks_cluster.main.identity[0].oidc[0].issuer
 }
 
+output "oidc_provider_arn" {
+  description = "ARN of the IAM OIDC provider for IRSA trust policies"
+  value       = aws_iam_openid_connect_provider.eks.arn
+}
+
 output "node_group_name" {
   description = "Managed node group name"
   value       = aws_eks_node_group.default.node_group_name

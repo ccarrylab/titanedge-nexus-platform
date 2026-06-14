@@ -23,3 +23,18 @@ variable "lock_table" {
   type        = string
   default     = "titanedge-nexus-terraform-locks"
 }
+
+variable "cluster_name" {
+  description = "EKS cluster name (used in IRSA role/policy names and conditions)"
+  type        = string
+}
+
+variable "oidc_provider_arn" {
+  description = "ARN of the cluster's IAM OIDC provider, from the eks module"
+  type        = string
+}
+
+variable "oidc_issuer_url" {
+  description = "OIDC issuer URL (with https://) for the EKS cluster, from the eks module"
+  type        = string
+}

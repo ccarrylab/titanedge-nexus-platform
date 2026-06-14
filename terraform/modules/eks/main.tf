@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
   }
 }
 
@@ -91,6 +95,27 @@ resource "aws_eks_cluster" "main" {
 
   lifecycle {
     ignore_changes = [bootstrap_self_managed_addons]
+  }
+}
+
+# ---------------------------------------------------------------------------
+# IAM OIDC provider — required for IRSA (IAM Roles for Service Accounts).
+# Lets pods assume IAM roles via their Kubernetes service account, scoped
+# to this cluster's OIDC issuer.
+# ---------------------------------------------------------------------------
+
+data "tls_certificate" "eks_oidc" {
+  url = aws_eks_cluster.main.identity[0].oidc[0].issuer
+}
+
+resource "aws_iam_openid_connect_provider" "eks" {
+  url             = aws_eks_cluster.main.identity[0].oidc[0].issuer
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = [data.tls_certificate.eks_oidc.certificates[0].sha1_fingerprint]
+
+  tags = {
+    Name      = "${var.cluster_name}-irsa"
+    ManagedBy = "terraform"
   }
 }
 

@@ -12,3 +12,13 @@ output "lock_table_name" {
   description = "DynamoDB table for state locking"
   value       = aws_dynamodb_table.terraform_locks.name
 }
+
+output "lb_controller_role_arn" {
+  description = "ARN of the IRSA role for the AWS Load Balancer Controller — use as the service account's eks.amazonaws.com/role-arn annotation"
+  value       = aws_iam_role.lb_controller.arn
+}
+
+output "karpenter_role_arn" {
+  description = "ARN of the IRSA role for Karpenter — matches the role-arn referenced in install-platform-stack.sh"
+  value       = aws_iam_role.karpenter.arn
+}

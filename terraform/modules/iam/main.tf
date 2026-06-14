@@ -127,3 +127,88 @@ resource "aws_dynamodb_table" "terraform_locks" {
     ManagedBy   = "terraform"
   }
 }
+
+# ---------------------------------------------------------------------------
+# IRSA: AWS Load Balancer Controller
+# Trust policy scoped to system:serviceaccount:kube-system:aws-load-balancer-controller.
+# Policy is the AWS-published AWSLoadBalancerControllerIAMPolicy (v3.3.0).
+# ---------------------------------------------------------------------------
+
+locals {
+  oidc_provider_id = replace(var.oidc_issuer_url, "https://", "")
+}
+
+resource "aws_iam_role" "lb_controller" {
+  name = "titanedge-nexus-${var.environment}-lb-controller"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Federated = var.oidc_provider_arn }
+      Action    = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringEquals = {
+          "${local.oidc_provider_id}:aud" = "sts.amazonaws.com"
+          "${local.oidc_provider_id}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
+        }
+      }
+    }]
+  })
+
+  tags = { Environment = var.environment, ManagedBy = "terraform" }
+}
+
+resource "aws_iam_policy" "lb_controller" {
+  name   = "titanedge-nexus-${var.environment}-lb-controller"
+  policy = file("${path.module}/policies/aws-load-balancer-controller.json")
+}
+
+resource "aws_iam_role_policy_attachment" "lb_controller" {
+  role       = aws_iam_role.lb_controller.name
+  policy_arn = aws_iam_policy.lb_controller.arn
+}
+
+# ---------------------------------------------------------------------------
+# IRSA: Karpenter controller
+# Trust policy scoped to system:serviceaccount:karpenter:karpenter.
+# Policy is based on Karpenter's documented controller policy (v1.x) —
+# review against karpenter.sh/docs/reference/cloudformation/ when upgrading
+# the Karpenter chart version, since required actions can change.
+# ---------------------------------------------------------------------------
+
+resource "aws_iam_role" "karpenter" {
+  name = "KarpenterControllerRole-${data.aws_caller_identity.current.account_id}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Federated = var.oidc_provider_arn }
+      Action    = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringEquals = {
+          "${local.oidc_provider_id}:aud" = "sts.amazonaws.com"
+          "${local.oidc_provider_id}:sub" = "system:serviceaccount:karpenter:karpenter"
+        }
+      }
+    }]
+  })
+
+  tags = { Environment = var.environment, ManagedBy = "terraform" }
+}
+
+resource "aws_iam_policy" "karpenter" {
+  name = "titanedge-nexus-${var.environment}-karpenter"
+  policy = templatefile("${path.module}/policies/karpenter-controller.json.tpl", {
+    partition    = "aws"
+    region       = data.aws_region.current.name
+    account_id   = data.aws_caller_identity.current.account_id
+    cluster_name = var.cluster_name
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter" {
+  role       = aws_iam_role.karpenter.name
+  policy_arn = aws_iam_policy.karpenter.arn
+}

@@ -8,11 +8,14 @@
 module "iam" {
   source = "../../modules/iam"
 
-  environment  = var.environment
-  github_org   = var.github_org
-  github_repo  = var.github_repo
-  state_bucket = var.state_bucket
-  lock_table   = var.lock_table
+  environment       = var.environment
+  github_org        = var.github_org
+  github_repo       = var.github_repo
+  state_bucket      = var.state_bucket
+  lock_table        = var.lock_table
+  cluster_name      = "titanedge-nexus-${var.environment}"
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_issuer_url   = module.eks.oidc_issuer_url
 }
 
 # ------------------------------------------------------------------

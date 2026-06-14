@@ -49,16 +49,21 @@ The original instance had no `storage_encrypted`, no `backup_retention_period`, 
 
 - RDS `iam_database_authentication_enabled = true` is queued by AWS as a pending modification (since `apply_immediately` isn't set on the instance) and will take effect at the next maintenance window. Nothing further to do — if you want it sooner, `aws rds reboot-db-instance --db-instance-identifier titanedge-nexus-dev` applies it immediately but causes a brief restart, so only do that during a maintenance window.
 
-- **Missing IAM/IRSA roles for AWS Load Balancer Controller and Karpenter.** `install-platform-stack.sh` now installs both, but neither has an IAM role wired up:
-  - AWS Load Balancer Controller needs an IRSA role built from the AWS-published `AWSLoadBalancerControllerIAMPolicy`, with a trust policy scoped to the `aws-load-balancer-controller` service account in `kube-system`.
-  - Karpenter's values reference `KarpenterControllerRole-${AWS_ACCOUNT_ID}`, which also doesn't exist — needs an IRSA role scoped to the `karpenter` service account in the `karpenter` namespace, with permissions for EC2 instance/fleet management, pricing, and SSM.
-  Until these are created (likely as new resources in `terraform/modules/iam/`), both controllers will start but their AWS API calls will fail. The VPC subnet tags (`kubernetes.io/role/elb`) needed by the LB controller are already in place from `terraform/modules/vpc`.
-
 ## Resolved: dev state drift on EKS secrets KMS key
 
-What looked like a pending "apply the new KMS key to EKS" change was actually state drift, not an unapplied config change. EKS \`encryption_config\` is immutable after cluster creation — you can't change the KMS key on a running cluster. At some point Terraform's state for \`aws_kms_key.eks_secrets\` had drifted to point at a different (orphaned) key than the one the cluster was actually built with, so \`terraform plan\` perpetually wanted to "update" the cluster to use a key it could never actually adopt.
+What looked like a pending "apply the new KMS key to EKS" change was actually state drift, not an unapplied config change. EKS `encryption_config` is immutable after cluster creation — you can't change the KMS key on a running cluster. At some point Terraform's state for `aws_kms_key.eks_secrets` had drifted to point at a different (orphaned) key than the one the cluster was actually built with, so `terraform plan` perpetually wanted to "update" the cluster to use a key it could never actually adopt.
 
-Fixed by removing the drifted resource from state and re-importing the key the cluster actually uses (\`f0d3930e-8121-44c1-a6b9-b38baa4bd0b6\`). The orphaned key (\`0e5b05e6-...\`) was scheduled for deletion (7-day window, deletes 2026-06-21).
+Fixed by removing the drifted resource from state and re-importing the key the cluster actually uses (`f0d3930e-8121-44c1-a6b9-b38baa4bd0b6`). The orphaned key (`0e5b05e6-...`) was scheduled for deletion (7-day window, deletes 2026-06-21).
+
+## Resolved: missing IAM/IRSA roles for AWS Load Balancer Controller and Karpenter
+
+`install-platform-stack.sh` installs both the AWS Load Balancer Controller and Karpenter, but neither had an IAM role wired up — added both as IRSA roles in `terraform/modules/iam`:
+
+- An IAM OIDC provider for the cluster (`aws_iam_openid_connect_provider`, in the `eks` module) — the foundational piece IRSA depends on, exposed as `oidc_provider_arn`/`oidc_issuer_url`.
+- `lb_controller` role + the AWS-published `AWSLoadBalancerControllerIAMPolicy` (v3.3.0), trust policy scoped to `system:serviceaccount:kube-system:aws-load-balancer-controller`.
+- `KarpenterControllerRole-${AWS_ACCOUNT_ID}` (matches the name already referenced in `install-platform-stack.sh`/`karpenter-values.yaml`) + a policy based on Karpenter's documented v1.x controller permissions, trust policy scoped to `system:serviceaccount:karpenter:karpenter`.
+
+The Karpenter policy (`terraform/modules/iam/policies/karpenter-controller.json.tpl`) was assembled from Karpenter's documented requirements rather than fetched from a single canonical source — when upgrading the Karpenter chart version, diff it against `karpenter.sh/docs/reference/cloudformation/` for that version, since required actions do change between releases.
 
 ---
 
