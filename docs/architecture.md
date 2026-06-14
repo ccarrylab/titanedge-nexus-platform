@@ -1,8 +1,8 @@
-# Atlas Relay Platform Architecture
+# TitanEdge Nexus Platform Architecture
 
 ## Overview
 
-Atlas Relay is a production-style cloud platform built on AWS using Terraform and Kubernetes.
+TitanEdge Nexus is a production-style cloud platform built on AWS using Terraform and Kubernetes.
 
 The platform is designed around:
 

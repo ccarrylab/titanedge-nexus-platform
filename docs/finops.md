@@ -2,7 +2,7 @@
 
 ## Cost Optimization Strategy
 
-The Atlas Relay platform was designed with cloud cost efficiency as a core engineering principle.
+The TitanEdge Nexus platform was designed with cloud cost efficiency as a core engineering principle.
 
 ## Optimization Areas
 
