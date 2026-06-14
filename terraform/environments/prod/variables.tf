@@ -37,10 +37,17 @@ variable "cluster_version" {
   default = "1.35"
 }
 
-# Restrict to office/VPN CIDRs in prod — do not leave as 0.0.0.0/0.
+# Public API endpoint is disabled in prod (cluster is reachable only from
+# inside the VPC — via bastion, VPN, or Direct Connect). No CIDR allowlist
+# is needed since the public endpoint doesn't exist.
+variable "eks_endpoint_public_access" {
+  type    = bool
+  default = false
+}
+
 variable "eks_public_access_cidrs" {
   type    = list(string)
-  default = ["YOUR.OFFICE.IP/32"]
+  default = []
 }
 
 variable "node_instance_types" {

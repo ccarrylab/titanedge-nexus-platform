@@ -33,11 +33,12 @@ module "security" {
 module "eks" {
   source = "../../modules/eks"
 
-  cluster_name        = "titanedge-nexus-${var.environment}"
-  environment         = var.environment
-  subnet_ids          = module.vpc.private_subnet_ids
-  cluster_version     = var.cluster_version
-  public_access_cidrs = var.eks_public_access_cidrs
+  cluster_name           = "titanedge-nexus-${var.environment}"
+  environment            = var.environment
+  subnet_ids             = module.vpc.private_subnet_ids
+  cluster_version        = var.cluster_version
+  endpoint_public_access = var.eks_endpoint_public_access
+  public_access_cidrs    = var.eks_public_access_cidrs
 
   node_instance_types = var.node_instance_types
   node_desired_size   = var.node_desired_size

@@ -86,7 +86,8 @@ make test-integration  # Terratest against real AWS (plan-only by default)
 | `single_nat_gateway` | `true` (cheaper) | `false` (per-AZ HA) |
 | `rds_multi_az` | `false` | `true` |
 | `rds_deletion_protection` | `false` | `true` |
-| `eks_public_access_cidrs` | `["0.0.0.0/0"]` | `["YOUR.OFFICE.IP/32"]` |
+| `eks_endpoint_public_access` | `true` | `false` (private-only; access via VPN/bastion) |
+| `eks_public_access_cidrs` | `["0.0.0.0/0"]` | `[]` (no public endpoint to allowlist) |
 | `node_instance_types` | `["t3.small"]` | `["t3.medium"]` |
 
 ## Operational runbooks
