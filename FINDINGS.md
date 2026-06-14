@@ -31,24 +31,24 @@ The original instance had no `storage_encrypted`, no `backup_retention_period`, 
 
 ## Resolved (this session)
 
-**6. The VPC module is dead code, duplicated three times.** *Fixed:* `stage` and `prod` had never been applied (skeleton code only), so both were rewritten to compose the same shared modules `dev` uses (`vpc`, `security`, `eks`, `rds`, `redis`, `observability`) — no `terraform state mv` needed. Verified via `make test` (all static/unit tests pass) and a clean `terraform plan` for `dev` (zero unexpected diff from the refactor).
+**6. VPC module was dead code, duplicated across all three envs.** Turned out stage and prod had never actually been applied — just skeleton configs. Rewrote both to use the same modules as dev (vpc, security, eks, rds, redis, observability). No state surgery needed since nothing was running. Ran `make test` and a `terraform plan` against dev afterward — clean, zero unexpected diff.
 
-**7. Single NAT gateway across all AZs.** *Fixed:* `prod` now sets `single_nat_gateway = false` for per-AZ NAT HA; `dev`/`stage` keep `single_nat_gateway = true` for cost. Covered by the `vpc` module's `per_az_nat_mode_for_prod` test.
+**7. Single NAT gateway, no per-AZ redundancy.** Prod now sets `single_nat_gateway = false` so each AZ gets its own NAT (HA). Dev and stage stay on a single NAT to keep costs down. There's a test for this (`per_az_nat_mode_for_prod`).
 
-**8. EKS cluster missing hardening.** *Already fixed* in a prior pass — `terraform/modules/eks/main.tf` pins `cluster_version`, sets `encryption_config` (KMS envelope encryption for secrets), and enables all `enabled_cluster_log_types`. This session added Checkov skip-comment justifications for the two endpoint-access checks (`CKV_AWS_38`/`CKV_AWS_39`), since public endpoint CIDR is intentionally environment-configurable (open in dev, restricted in prod via `terraform.tfvars`).
+**8. EKS hardening — mostly already done.** Version pin, KMS envelope encryption, full log types were already in the eks module from an earlier pass. Just added checkov skip comments with actual justification for the two public-endpoint checks (CKV_AWS_38/39) — the endpoint access is meant to be configurable per env (open in dev, locked down in prod via tfvars), so flagging it as a static violation didn't make sense.
 
-**9. FinOps CI job is a placebo.** *Fixed:* `platform-ci.yml`'s "FinOps checks" step now greps `kubernetes/karpenter/provisioner.yaml` for a `karpenter.sh/capacity-type` requirement that includes `spot`, and fails the build if absent. The provisioner was updated to declare `["spot", "on-demand"]`.
+**9. FinOps CI step was fake.** It literally just echoed "Spot instances enabled" — checked nothing. Now it greps the karpenter provisioner for a capacity-type requirement that actually includes spot, and fails if it's missing. Also updated the provisioner itself to declare spot + on-demand (it previously declared neither).
 
-**11. State locking disabled.** *Fixed:* CI now generates the `dev` backend with `dynamodb_table = "${{ secrets.TF_STATE_LOCK_TABLE }}"` (verified to match the real table, `titanedge-nexus-terraform-locks`) and `terraform plan` no longer uses `-lock=false`.
+**11. State locking wasn't wired up.** CI was generating a backend with `dynamodb_table = null` and running plan with `-lock=false`. Fixed both — backend now points at the real lock table (`titanedge-nexus-terraform-locks`, confirmed against the repo secret).
 
 ## Low
 
 **10. ~650 MB of `.terraform/` provider binaries in the archive** (darwin_arm64 — unusable on CI runners anyway). Exclude with `zip -x "*.terraform*"` or archive from `git archive`.
 
-## Outstanding
+## Still open
 
-- **Prod `eks_public_access_cidrs` placeholder.** `terraform/environments/prod/variables.tf` defaults this to `"YOUR.OFFICE.IP/32"` — must be set to a real restricted CIDR before any `terraform apply` against prod.
-- **Pending `dev` drift (unrelated to this session).** A current `terraform plan` for `dev` shows 2 in-place updates: the EKS cluster's `encryption_config.provider.key_arn` (pointing at a newer KMS key than what's applied) and `aws_db_instance.postgres.iam_database_authentication_enabled` (`false` → `true`). Both are additive hardening already reflected in the module code; apply during a maintenance window.
+- Prod's `eks_public_access_cidrs` is still set to a placeholder (`YOUR.OFFICE.IP/32`). Don't apply prod until that's a real CIDR.
+- `terraform plan` on dev currently shows two pending in-place updates that aren't from this session — the EKS cluster's KMS key ARN for secrets encryption, and `iam_database_authentication_enabled` flipping to true on RDS. Both look like leftover from an earlier hardening pass that was never applied. Neither is destructive, just apply whenever there's a maintenance window.
 
 ---
 
