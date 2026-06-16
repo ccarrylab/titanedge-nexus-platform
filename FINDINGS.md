@@ -79,6 +79,12 @@ This required two supporting pieces in Terraform:
 
 Karpenter creates and manages its own instance profile from the role — no `aws_iam_instance_profile` resource was needed in Terraform.
 
+## Resolved: stale/conflicting monitoring manifests and kubecost cluster name
+
+`kubernetes/base/monitoring/{grafana,prometheus}.yaml` were stub ConfigMaps (truncated mid-document — no real datasource or scrape config) synced into the `monitoring` namespace by ArgoCD's `kubernetes/base` path. They predate `install-platform-stack.sh`'s `kube-prometheus-stack` Helm install, which deploys its own properly-configured Prometheus and Grafana into that same namespace — leaving the stubs in place would have meant ArgoCD and Helm both managing resources in `monitoring`, with the ArgoCD-managed ones being useless. Removed both files (and the now-empty `kubernetes/base/monitoring/` directory); `kubernetes/base` now contains only the `api/` deployment ArgoCD is actually meant to manage.
+
+Separately, `kubernetes/kubecost/kubecost-values.yaml` had `clusterName: titanedge-nexus-platform`, which doesn't match any real cluster (`titanedge-nexus-dev` / `-stage` / `-prod`) — same class of stale-naming issue as the earlier "Atlas Relay" branding and the stale cluster endpoint in `karpenter-values.yaml`. Fixed to `titanedge-nexus-dev`. Note kubecost still isn't installed by anything — `install-platform-stack.sh` doesn't reference it — so this values file is ready to use but not yet wired into the install flow; left as-is rather than expanding scope into installing a new tool that wasn't requested.
+
 ---
 
 ## Test suite layout

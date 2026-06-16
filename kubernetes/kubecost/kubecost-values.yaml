@@ -3,7 +3,7 @@ global:
     enabled: true
 
 kubecostProductConfigs:
-  clusterName: titanedge-nexus-platform
+  clusterName: titanedge-nexus-dev
 
 networkCosts:
   enabled: true
