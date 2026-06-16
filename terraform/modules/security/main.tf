@@ -71,7 +71,7 @@ resource "aws_security_group" "eks_nodes" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = { Name = "titanedge-nexus-${var.environment}-eks-nodes", Environment = var.environment, ManagedBy = "terraform" }
+  tags = { Name = "titanedge-nexus-${var.environment}-eks-nodes", Environment = var.environment, ManagedBy = "terraform", "karpenter.sh/discovery" = "titanedge-nexus-${var.environment}" }
 
   lifecycle {
     ignore_changes = [egress, ingress]

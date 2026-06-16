@@ -182,3 +182,57 @@ resource "aws_eks_node_group" "default" {
     aws_iam_role_policy_attachment.node_ecr,
   ]
 }
+
+# ---------------------------------------------------------------------------
+# Karpenter node role
+# Nodes launched by Karpenter assume this role (not the managed node group's
+# role above). Referenced by the Karpenter controller's iam:PassRole
+# permission (see terraform/modules/iam/policies/karpenter-controller.json.tpl)
+# and by EC2NodeClass's instanceProfile setting. Karpenter creates and manages
+# the instance profile itself; Terraform only needs to provide the role and
+# authorize it to join the cluster via an access entry.
+# ---------------------------------------------------------------------------
+
+resource "aws_iam_role" "karpenter_node" {
+  name = "KarpenterNodeRole-${var.cluster_name}"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+
+  tags = {
+    Environment = var.environment
+    ManagedBy   = "terraform"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_worker" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_cni" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_ecr" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+
+resource "aws_iam_role_policy_attachment" "karpenter_node_ssm" {
+  role       = aws_iam_role.karpenter_node.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_eks_access_entry" "karpenter_node" {
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = aws_iam_role.karpenter_node.arn
+  type          = "EC2_LINUX"
+}

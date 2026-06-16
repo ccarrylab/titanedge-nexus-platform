@@ -37,15 +37,15 @@ jobs:
       - uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
       - name: Run FinOps checks
         run: |
-          if ! grep -q "karpenter.sh/capacity-type" kubernetes/karpenter/provisioner.yaml; then
-            echo "::error::Karpenter provisioner does not declare a capacity-type requirement (spot/on-demand)"
+          if ! grep -q "karpenter.sh/capacity-type" kubernetes/karpenter/nodepool.yaml; then
+            echo "::error::Karpenter NodePool does not declare a capacity-type requirement (spot/on-demand)"
             exit 1
           fi
-          if ! grep -q '"spot"' kubernetes/karpenter/provisioner.yaml; then
-            echo "::error::Karpenter provisioner does not allow spot capacity"
+          if ! grep -q '"spot"' kubernetes/karpenter/nodepool.yaml; then
+            echo "::error::Karpenter NodePool does not allow spot capacity"
             exit 1
           fi
-          echo "✅ Karpenter provisioner allows spot and on-demand capacity"
+          echo "✅ Karpenter NodePool allows spot and on-demand capacity"
 
   terraform-plan:
     name: Plan (dev)

@@ -65,6 +65,20 @@ Fixed by removing the drifted resource from state and re-importing the key the c
 
 The Karpenter policy (`terraform/modules/iam/policies/karpenter-controller.json.tpl`) was assembled from Karpenter's documented requirements rather than fetched from a single canonical source — when upgrading the Karpenter chart version, diff it against `karpenter.sh/docs/reference/cloudformation/` for that version, since required actions do change between releases.
 
+## Resolved: Karpenter manifests used the removed v1beta1 Provisioner API
+
+`kubernetes/karpenter/provisioner.yaml` used `karpenter.sh/v1beta1 Provisioner`, which was removed entirely in Karpenter 1.0 — the version pinned in `install-platform-stack.sh`. Replaced with the current API:
+
+- `kubernetes/karpenter/nodepool.yaml` (`karpenter.sh/v1 NodePool`) — carries forward the spot+on-demand capacity-type requirement the FinOps CI check looks for (updated to point at the new filename).
+- `kubernetes/karpenter/ec2nodeclass.yaml` (`karpenter.k8s.aws/v1 EC2NodeClass`) — references `role: KarpenterNodeRole-titanedge-nexus-dev` and discovers subnets/security groups via a `karpenter.sh/discovery` tag.
+
+This required two supporting pieces in Terraform:
+
+- A `KarpenterNodeRole-${cluster_name}` IAM role in the `eks` module (worker/CNI/ECR/SSM managed policies — the role EC2 instances Karpenter launches will assume) plus an `aws_eks_access_entry` (type `EC2_LINUX`) so those nodes can join the cluster, matching how managed node groups are auto-registered. The role already existed in AWS from an earlier manual setup attempt (created 2026-05-26) with an identical trust policy and all four policies attached, so it was imported rather than recreated.
+- `karpenter.sh/discovery = titanedge-nexus-${environment}` tags on the VPC private subnets and the `eks_nodes` security group, so `EC2NodeClass` can find where to launch nodes.
+
+Karpenter creates and manages its own instance profile from the role — no `aws_iam_instance_profile` resource was needed in Terraform.
+
 ---
 
 ## Test suite layout

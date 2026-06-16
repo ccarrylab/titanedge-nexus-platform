@@ -27,3 +27,8 @@ output "node_group_name" {
   description = "Managed node group name"
   value       = aws_eks_node_group.default.node_group_name
 }
+
+output "karpenter_node_role_name" {
+  description = "Name of the IAM role Karpenter-launched nodes assume — set as EC2NodeClass.spec.role"
+  value       = aws_iam_role.karpenter_node.name
+}

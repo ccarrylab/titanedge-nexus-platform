@@ -1,0 +1,23 @@
+# EC2NodeClass — AWS-specific settings for nodes Karpenter launches.
+# role/subnetSelectorTerms/securityGroupSelectorTerms are discovered via the
+# KarpenterNodeRole-<cluster> IAM role (terraform/modules/eks) and the
+# karpenter.sh/discovery=<cluster_name> tag (terraform/modules/vpc and
+# terraform/modules/security).
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: default
+spec:
+  amiFamily: AL2023
+  amiSelectorTerms:
+    - alias: al2023@latest
+  role: "KarpenterNodeRole-titanedge-nexus-dev"
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "titanedge-nexus-dev"
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "titanedge-nexus-dev"
+  tags:
+    ManagedBy: karpenter
+    Environment: dev

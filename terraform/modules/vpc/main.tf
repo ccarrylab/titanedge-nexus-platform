@@ -54,6 +54,7 @@ resource "aws_subnet" "private" {
     Environment                       = var.environment
     Type                              = "Private"
     "kubernetes.io/role/internal-elb" = "1"
+    "karpenter.sh/discovery"          = local.name_prefix
   }
 }
 
