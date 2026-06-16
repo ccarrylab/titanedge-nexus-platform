@@ -85,6 +85,12 @@ Karpenter creates and manages its own instance profile from the role — no `aws
 
 Separately, `kubernetes/kubecost/kubecost-values.yaml` had `clusterName: titanedge-nexus-platform`, which doesn't match any real cluster (`titanedge-nexus-dev` / `-stage` / `-prod`) — same class of stale-naming issue as the earlier "Atlas Relay" branding and the stale cluster endpoint in `karpenter-values.yaml`. Fixed to `titanedge-nexus-dev`. Note kubecost still isn't installed by anything — `install-platform-stack.sh` doesn't reference it — so this values file is ready to use but not yet wired into the install flow; left as-is rather than expanding scope into installing a new tool that wasn't requested.
 
+## Resolved: Redis auth token generated but never stored anywhere retrievable
+
+`terraform/modules/redis` generates a `random_password.redis_auth` and sets it as the ElastiCache replication group's `auth_token` (required since `transit_encryption_enabled = true`), but never exposed it anywhere — no Secrets Manager secret, no output. Once applied, the only place the token existed was Terraform state; there was no supported way for an application or operator to retrieve it to actually connect to Redis. Same class of issue as the original hardcoded-RDS-password finding, just inverted (generated-but-inaccessible instead of hardcoded-and-exposed).
+
+Fixed by adding an `aws_secretsmanager_secret`/`_secret_version` pair, mirroring the existing `rds` module's pattern exactly: same naming convention (`titanedge-nexus/<env>/redis/auth-token`), same `recovery_window_in_days` logic (0 in dev, 30 in prod), and reusing the module's existing `aws_kms_key.redis` for encryption rather than adding a second key — `rds` reuses its one secret-encryption key for both the secret and storage encryption, so this follows that precedent rather than introducing a new pattern. The secret stores `auth_token`, `host`, and `port` together, ready to use. Exposed as `module.redis.secret_arn` and surfaced in `dev`'s environment outputs as `redis_secret_arn`, matching `rds_secret_arn`.
+
 ---
 
 ## Test suite layout

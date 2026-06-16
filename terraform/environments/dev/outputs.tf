@@ -10,6 +10,7 @@ output "redis_endpoint" { value = module.redis.primary_endpoint }
 output "github_actions_role" { value = module.iam.github_actions_role_arn }
 output "dashboard_url" { value = module.observability.dashboard_url }
 output "rds_secret_arn" { value = module.rds.secret_arn }
+output "redis_secret_arn" { value = module.redis.secret_arn }
 output "configure_kubectl" {
   value = "aws eks update-kubeconfig --name ${module.eks.cluster_name} --region ${var.aws_region}"
 }

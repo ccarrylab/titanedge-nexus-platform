@@ -32,6 +32,27 @@ resource "aws_elasticache_subnet_group" "main" {
   tags = { Environment = var.environment, ManagedBy = "terraform" }
 }
 
+# Store the auth token in Secrets Manager — without this, the generated
+# token only exists in Terraform state and applications/operators have no
+# supported way to retrieve it to actually connect to Redis.
+resource "aws_secretsmanager_secret" "redis_auth" {
+  name                    = "titanedge-nexus/${var.environment}/redis/auth-token"
+  description             = "ElastiCache Redis AUTH token — managed by Terraform"
+  recovery_window_in_days = var.environment == "prod" ? 30 : 0
+  kms_key_id              = aws_kms_key.redis.arn
+
+  tags = { Environment = var.environment, ManagedBy = "terraform" }
+}
+
+resource "aws_secretsmanager_secret_version" "redis_auth" {
+  secret_id = aws_secretsmanager_secret.redis_auth.id
+  secret_string = jsonencode({
+    auth_token = random_password.redis_auth.result
+    host       = aws_elasticache_replication_group.redis.primary_endpoint_address
+    port       = 6379
+  })
+}
+
 resource "aws_elasticache_replication_group" "redis" {
   replication_group_id = "titanedge-nexus-${var.environment}"
   description          = "TitanEdge Nexus ${var.environment} Redis cluster"
