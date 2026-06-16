@@ -94,7 +94,3 @@ resource "aws_elasticache_replication_group" "redis" {
 
   tags = { Environment = var.environment, ManagedBy = "terraform" }
 }
-
-# Prevent replacement when adding KMS key to existing cluster
-# The kms_key_id can only be set at creation time on ElastiCache.
-# For existing clusters, manage encryption separately.
