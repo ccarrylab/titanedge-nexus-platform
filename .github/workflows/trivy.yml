@@ -23,7 +23,7 @@ jobs:
           scan-ref: 'terraform/'
           format: 'sarif'
           output: 'trivy-iac.sarif'
-      - uses: github/codeql-action/upload-sarif@v4
+      - uses: github/codeql-action/upload-sarif@v4.37.4
         with:
           sarif_file: 'trivy-iac.sarif'
 
@@ -38,6 +38,6 @@ jobs:
           scan-ref: 'kubernetes/'
           format: 'sarif'
           output: 'trivy-k8s.sarif'
-      - uses: github/codeql-action/upload-sarif@v4
+      - uses: github/codeql-action/upload-sarif@v4.37.4
         with:
           sarif_file: 'trivy-k8s.sarif'
